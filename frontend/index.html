@@ -560,6 +560,7 @@
             border: 1px solid var(--border-light);
             display: flex;
             flex-direction: column;
+            cursor: pointer;
         }
         .card:hover {
             box-shadow: var(--shadow-lg);
@@ -578,6 +579,12 @@
             color: var(--soft-emerald-400);
             position: relative;
             overflow: hidden;
+        }
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         .card-image::after {
             content: '';
@@ -871,6 +878,12 @@
             justify-content: center;
             font-size: 5rem;
             color: var(--soft-emerald-400);
+        }
+        .article-featured-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius-lg);
         }
         .article-content {
             font-size: 1.05rem;
@@ -1365,6 +1378,27 @@
         [dir="rtl"] .card-link svg {
             transform: rotate(180deg);
         }
+        
+        /* Loading & Error States */
+        .loading-spinner {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--soft-emerald-600);
+            font-weight: 500;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: var(--radius-lg);
+            grid-column: 1 / -1;
+        }
+        .error-message {
+            text-align: center;
+            padding: 48px 20px;
+            color: #c62828;
+            background: #ffebee;
+            border-radius: var(--radius-lg);
+            border-left: 4px solid #c62828;
+            grid-column: 1 / -1;
+        }
     </style>
 </head>
 <body>
@@ -1433,7 +1467,7 @@
                     <div class="divider-ornament"><span class="line"></span><span class="diamond"></span><span class="line"></span></div>
                     <p class="section-subtitle">Handpicked articles to nourish your soul and deepen your understanding of Islam.</p>
                     <div class="cards-grid" id="featuredArticlesContainer">
-                        <!-- Populated by JS -->
+                        <!-- Populated by JS dynamically from API -->
                     </div>
                 </div>
             </section>
@@ -1484,7 +1518,7 @@
                     <h2 class="section-title" id="latestTitle">📝 Latest Blog Posts</h2>
                     <div class="divider-ornament"><span class="line"></span><span class="diamond"></span><span class="line"></span></div>
                     <div class="cards-grid" id="latestPostsContainer">
-                        <!-- Populated by JS -->
+                        <!-- Populated by JS dynamically from API -->
                     </div>
                     <div style="text-align:center;margin-top:28px;">
                         <button class="btn btn-outline" onclick="navigateTo('blog')">View All Posts →</button>
@@ -1511,7 +1545,7 @@
                     </div>
                     <!-- Blog Grid -->
                     <div class="cards-grid" id="blogGridContainer">
-                        <!-- Populated by JS -->
+                        <!-- Populated by JS dynamically from API -->
                     </div>
                     <!-- Pagination -->
                     <div class="pagination" id="blogPagination">
@@ -1669,268 +1703,379 @@
             const navbar = document.getElementById('navbar');
             const hamburgerBtn = document.getElementById('hamburgerBtn');
             const mobileMenu = document.getElementById('mobileMenu');
-            const navLinks = document.querySelectorAll('.nav-links a, .mobile-menu a');
             const toastContainer = document.getElementById('toastContainer');
-            const mainContent = document.getElementById('mainContent');
             const currentYearSpan = document.getElementById('currentYear');
 
             // Set current year
             if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
 
-            // ========== Blog Data ==========
-            const blogPosts = [{
-                id: 1,
-                title: 'The Beauty of Surah Al-Fatihah',
-                category: 'Quran',
-                excerpt: 'Discover the profound meanings behind the most recited chapter of the Quran — the foundation of every prayer.',
-                content: 'Surah Al-Fatihah, also known as "The Opening," is the first chapter of the Holy Quran and the most essential surah in a Muslim\'s daily life. It is recited in every rak\'ah of every prayer. The Prophet Muhammad ﷺ described it as the greatest surah in the Quran. It contains seven verses that encompass praise of Allah, a declaration of worship, and a heartfelt supplication for guidance.\n\nThe surah begins with "Bismillah ir-Rahman ir-Rahim" — establishing Allah\'s mercy as the core theme. Each verse carries layers of meaning that scholars have expounded upon for centuries. It serves as a direct conversation between the believer and their Creator.',
-                imageEmoji: '📖',
-                author: 'Ustadh Ahmad Farooq',
-                date: 'May 10, 2026',
-                featured: true,
-                quranCallout: 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ',
-                quranCalloutRef: 'Surah Al-Fatihah (1:2) — "All praise is due to Allah, Lord of the worlds."'
-            }, {
-                id: 2,
-                title: '40 Hadith on Kindness & Compassion',
-                category: 'Hadith',
-                excerpt: 'A beautiful collection of prophetic traditions that emphasize mercy, gentleness, and love for one another.',
-                content: 'The Prophet Muhammad ﷺ was sent as a mercy to all mankind. His teachings overflow with compassion, kindness, and love for humanity. This article explores 40 authentic hadith that highlight the importance of mercy in Islam.\n\nFrom caring for neighbors to treating animals with gentleness, these hadith paint a complete picture of Islamic ethics. One famous hadith states: "The merciful are shown mercy by the Most Merciful. Be merciful to those on earth, and the One in the heavens will have mercy upon you."',
-                imageEmoji: '🕊️',
-                author: 'Sr. Maryam Ibrahim',
-                date: 'May 8, 2026',
-                featured: true,
-                quranCallout: 'وَمَاۤ أَرْسَلْنَـٰكَ إِلَّا رَحْمَةًۭ لِّلْعَـٰلَمِينَ',
-                quranCalloutRef: 'Surah Al-Anbiya (21:107) — "We have sent you only as a mercy to the worlds."'
-            }, {
-                id: 3,
-                title: 'Preparing Your Heart for Ramadan',
-                category: 'Ramadan',
-                excerpt: 'Practical spiritual tips to make the most of the blessed month before it arrives.',
-                content: 'Ramadan is the most sacred month in the Islamic calendar. Preparing for it spiritually can transform your experience. This guide covers intention-setting, Quran reading schedules, charity planning, and how to cultivate a heart ready to receive Allah\'s mercy during those 30 blessed days.\n\nStart by increasing your voluntary fasts in the months leading up to Ramadan. Increase your Quran recitation and dhikr. Plan your meals and schedule to maximize worship time. Most importantly, purify your heart from grudges and ill feelings toward others.',
-                imageEmoji: '🌙',
-                author: 'Imam Khalid Hassan',
-                date: 'May 5, 2026',
-                featured: true,
-                quranCallout: 'شَهْرُ رَمَضَانَ ٱلَّذِىۤ أُنزِلَ فِيهِ ٱلْقُرْءَانُ',
-                quranCalloutRef: 'Surah Al-Baqarah (2:185) — "The month of Ramadan in which the Quran was revealed."'
-            }, {
-                id: 4,
-                title: 'Morning & Evening Duas for Protection',
-                category: 'Duas',
-                excerpt: 'Essential daily supplications that the Prophet ﷺ recited for divine protection and blessings.',
-                content: 'The morning and evening adhkar (remembrances) are a fortress for the believer. This comprehensive guide covers the authentic duas the Prophet ﷺ would recite at the beginning and end of each day. These include Ayat al-Kursi, the three Quls, and various supplications for protection, gratitude, and well-being.',
-                imageEmoji: '🤲',
-                author: 'Ustadh Ahmad Farooq',
-                date: 'May 2, 2026',
-                featured: false,
-                quranCallout: 'فَٱذْكُرُونِىٓ أَذْكُرْكُمْ',
-                quranCalloutRef: 'Surah Al-Baqarah (2:152) — "So remember Me; I will remember you."'
-            }, {
-                id: 5,
-                title: 'The Golden Age of Islamic Civilization',
-                category: 'Islamic History',
-                excerpt: 'How Muslim scholars shaped the modern world through science, medicine, and philosophy.',
-                content: 'From the 8th to the 14th century, the Islamic world was a beacon of knowledge and innovation. Scholars like Al-Khwarizmi (father of algebra), Ibn Sina (pioneer of medicine), and Al-Biruni made groundbreaking contributions. This article explores the legacy of the Islamic Golden Age and its lasting impact on modern civilization.',
-                imageEmoji: '🏛️',
-                author: 'Dr. Fatima Al-Zahra',
-                date: 'April 28, 2026',
-                featured: false,
-                quranCallout: 'وَقُل رَّبِّ زِدْنِى عِلْمًۭا',
-                quranCalloutRef: 'Surah Ta-Ha (20:114) — "And say: My Lord, increase me in knowledge."'
-            }, {
-                id: 6,
-                title: 'Stories of the Prophets: Prophet Yusuf (AS)',
-                category: 'Stories of Prophets',
-                excerpt: 'The timeless story of patience, forgiveness, and divine wisdom from the life of Prophet Yusuf.',
-                content: 'The story of Prophet Yusuf (Joseph, AS) is one of the most beautiful narratives in the Quran. From being thrown into a well by his jealous brothers to becoming a ruler in Egypt, his life exemplifies patience, integrity, and unwavering trust in Allah. The entire Surah Yusuf is devoted to his story, described by Allah as "the best of stories."',
-                imageEmoji: '👑',
-                author: 'Sr. Maryam Ibrahim',
-                date: 'April 22, 2026',
-                featured: false,
-                quranCallout: 'إِنَّهُۥ مَن يَتَّقِ وَيَصْبِرْ فَإِنَّ ٱللَّهَ لَا يُضِيعُ أَجْرَ ٱلْمُحْسِنِينَ',
-                quranCalloutRef: 'Surah Yusuf (12:90) — "Indeed, whoever fears Allah and is patient — Allah does not waste the reward of the doers of good."'
-            }, {
-                id: 7,
-                title: 'Understanding Tawheed: The Oneness of Allah',
-                category: 'Quran',
-                excerpt: 'A deep dive into the core concept of Islamic monotheism and its transformative power.',
-                content: 'Tawheed — the absolute oneness of Allah — is the foundation of Islam. It is not merely a theological concept but a way of life that liberates the soul from all false attachments. This article explores the three categories of Tawheed: Rububiyyah, Uluhiyyah, and Asma wa Sifat, with practical implications for daily life.',
-                imageEmoji: '☝️',
-                author: 'Imam Khalid Hassan',
-                date: 'April 18, 2026',
-                featured: false,
-                quranCallout: 'قُلْ هُوَ ٱللَّهُ أَحَدٌ',
-                quranCalloutRef: 'Surah Al-Ikhlas (112:1) — "Say: He is Allah, the One and Only."'
-            }, {
-                id: 8,
-                title: 'The Virtues of Fasting Beyond Ramadan',
-                category: 'Ramadan',
-                excerpt: 'Learn about the recommended fasts throughout the Islamic year and their spiritual benefits.',
-                content: 'While Ramadan fasting is obligatory, there are many voluntary fasts that bring immense reward. From the fasts of Shawwal to the Day of Arafah, and the weekly Monday-Thursday fasts, this article details the sunnah fasts and how they can transform your spiritual life year-round.',
-                imageEmoji: '🌅',
-                author: 'Ustadh Ahmad Farooq',
-                date: 'April 14, 2026',
-                featured: false,
-                quranCallout: 'وَأَن تَصُومُوا۟ خَيْرٌۭ لَّكُمْ',
-                quranCalloutRef: 'Surah Al-Baqarah (2:184) — "And to fast is better for you, if only you knew."'
-            }, {
-                id: 9,
-                title: 'Islamic Etiquette for Daily Life',
-                category: 'Hadith',
-                excerpt: 'Practical sunnah practices that bring barakah into everyday routines.',
-                content: 'Islam is not just a religion of rituals — it is a complete way of life. From the manner of eating and sleeping to greeting others and entering homes, the Prophet ﷺ taught beautiful etiquettes that enhance our daily lives. This comprehensive guide covers essential Islamic manners with supporting hadith.',
-                imageEmoji: '🌸',
-                author: 'Sr. Maryam Ibrahim',
-                date: 'April 10, 2026',
-                featured: false,
-                quranCallout: 'لَّقَدْ كَانَ لَكُمْ فِى رَسُولِ ٱللَّهِ أُسْوَةٌ حَسَنَةٌۭ',
-                quranCalloutRef: 'Surah Al-Ahzab (33:21) — "There has certainly been for you in the Messenger of Allah an excellent pattern."'
-            }, {
-                id: 10,
-                title: 'The Power of Istighfar (Seeking Forgiveness)',
-                category: 'Duas',
-                excerpt: 'How regular repentance can unlock blessings, peace, and solutions to life\'s problems.',
-                content: 'Istighfar is one of the most powerful acts of worship. The Prophet ﷺ would seek forgiveness over 70 times a day despite being sinless. This article explores the benefits of istighfar as mentioned in the Quran and Sunnah, including relief from distress, increase in provision, and purification of the heart.',
-                imageEmoji: '💫',
-                author: 'Dr. Fatima Al-Zahra',
-                date: 'April 6, 2026',
-                featured: false,
-                quranCallout: 'فَقُلْتُ ٱسْتَغْفِرُوا۟ رَبَّكُمْ إِنَّهُۥ كَانَ غَفَّارًۭا',
-                quranCalloutRef: 'Surah Nuh (71:10) — "I said: Ask forgiveness of your Lord. Indeed, He is ever Forgiving."'
-            }, {
-                id: 11,
-                title: 'The Legacy of Sultan Salahuddin Al-Ayyubi',
-                category: 'Islamic History',
-                excerpt: 'The remarkable story of the noble Muslim leader who united the Ummah and liberated Jerusalem.',
-                content: 'Sultan Salahuddin Al-Ayyubi (Saladin) remains one of the most revered figures in Islamic history. Known for his chivalry, justice, and military brilliance, he recaptured Jerusalem in 1187 after 88 years of Crusader occupation. His character exemplified Islamic values even in warfare, earning respect from both allies and enemies.',
-                imageEmoji: '⚔️',
-                author: 'Imam Khalid Hassan',
-                date: 'March 30, 2026',
-                featured: false,
-                quranCallout: 'وَٱعْتَصِمُوا۟ بِحَبْلِ ٱللَّهِ جَمِيعًۭا وَلَا تَفَرَّقُوا۟',
-                quranCalloutRef: 'Surah Ali Imran (3:103) — "Hold firmly to the rope of Allah all together and do not become divided."'
-            }, {
-                id: 12,
-                title: 'Lessons from Prophet Ayyub\'s Patience',
-                category: 'Stories of Prophets',
-                excerpt: 'Finding hope and resilience through the extraordinary patience of Prophet Ayyub (AS).',
-                content: 'Prophet Ayyub (Job, AS) is the ultimate symbol of patience in the face of severe trials. He lost his wealth, his children, and his health — yet he never lost faith in Allah. His story teaches us that even in our darkest moments, Allah\'s mercy is near. This article reflects on the lessons we can draw from his unwavering trust.',
-                imageEmoji: '🍃',
-                author: 'Ustadh Ahmad Farooq',
-                date: 'March 24, 2026',
-                featured: false,
-                quranCallout: 'إِنَّا وَجَدْنَـٰهُ صَابِرًۭا ۚ نِّعْمَ ٱلْعَبْدُ ۖ إِنَّهُۥۤ أَوَّابٌۭ',
-                quranCalloutRef: 'Surah Sad (38:44) — "Indeed, We found him patient, an excellent servant. He was ever turning back [to Allah]."'
-            }];
-
-            // ========== Categories ==========
-            const categories = ['All', 'Quran', 'Hadith', 'Ramadan', 'Duas', 'Islamic History', 'Stories of Prophets'];
-            const categoryEmojis = {
-                'Quran': '📖',
-                'Hadith': '🕊️',
-                'Ramadan': '🌙',
-                'Duas': '🤲',
-                'Islamic History': '🏛️',
-                'Stories of Prophets': '👑'
-            };
-
-            // ========== Prayer Times Data ==========
-            const prayerData = [
-                { name: 'Fajr', arabic: 'الفجر', time: '4:32 AM' },
-                { name: 'Dhuhr', arabic: 'الظهر', time: '12:15 PM' },
-                { name: 'Asr', arabic: 'العصر', time: '4:10 PM' },
-                { name: 'Maghrib', arabic: 'المغرب', time: '7:05 PM' },
-                { name: 'Isha', arabic: 'العشاء', time: '8:45 PM' },
-            ];
-
-            // ========== Team Data ==========
-            const teamMembers = [
-                { name: 'Ustadh Ahmad Farooq', role: 'Founder & Lead Writer', emoji: '🧔‍♂️', bio: 'Islamic scholar with 15 years of teaching experience.' },
-                { name: 'Sr. Maryam Ibrahim', role: 'Content Editor', emoji: '🧕', bio: 'Passionate about making Islamic knowledge accessible.' },
-                { name: 'Imam Khalid Hassan', role: 'Spiritual Advisor', emoji: '👳‍♂️', bio: 'Community imam dedicated to youth education.' },
-                { name: 'Dr. Fatima Al-Zahra', role: 'Research Contributor', emoji: '👩‍🔬', bio: 'Historian specializing in Islamic civilization.' },
-            ];
-
-            const islamicValues = [
-                { name: 'Ikhlas (Sincerity)', emoji: '💚',
-                    desc: 'Every action is for the sake of Allah alone.' },
-                { name: 'Ilm (Knowledge)', emoji: '📚', desc: 'Seeking knowledge is an obligation upon every Muslim.' },
-                { name: 'Rahma (Mercy)', emoji: '🕊️', desc: 'Embodying compassion in all our dealings.' },
-                { name: 'Adl (Justice)', emoji: '⚖️', desc: 'Standing firmly for fairness and equity.' },
-                { name: 'Sabr (Patience)', emoji: '🌿', desc: 'Persevering with grace through all trials.' },
-                { name: 'Shukr (Gratitude)', emoji: '🙏', desc: 'Recognizing and appreciating every blessing.' },
-            ];
-
-            // ========== State ==========
+            // ========== API Endpoint ==========
+            const API_URL = 'https://noor-backend-hanj.onrender.com/api/articles';
+            
+            // ========== Global State ==========
+            let allArticles = [];
             let currentPage = 'home';
             let blogFilterCategory = 'All';
             let blogSearchQuery = '';
             let blogCurrentPageNum = 1;
             const POSTS_PER_PAGE = 6;
+            let isLoading = false;
+            let articlesLoaded = false;
 
-            // ========== Navigation ==========
-            function navigateTo(page, articleId = null) {
-                currentPage = page;
-                // Hide all pages
-                document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-page'));
-                // Show target page
-                const targetPage = document.getElementById('page-' + page);
-                if (targetPage) {
-                    targetPage.classList.add('active-page');
-                }
-                // Update nav active states
-                document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('data-page') === page) {
-                        link.classList.add('active');
+            // ========== Helper Functions ==========
+            function truncateText(text, maxLength = 120) {
+                if (!text) return '';
+                if (text.length <= maxLength) return text;
+                return text.substring(0, maxLength).trim() + '...';
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return 'Recently';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            function getCategoryEmoji(category) {
+                const emojis = {
+                    'Quran': '📖',
+                    'Hadith': '🕊️',
+                    'Ramadan': '🌙',
+                    'Duas': '🤲',
+                    'Islamic': '🏛️',
+                    'Islamic History': '🏛️',
+                    'Stories of Prophets': '👑'
+                };
+                return emojis[category] || '📚';
+            }
+
+            function createBlogCard(article) {
+                const imageHtml = article.image && article.image !== '' 
+                    ? `<img src="${article.image}" alt="${article.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\"display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;\\">${getCategoryEmoji(article.category)}</div>';">`
+                    : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;">${getCategoryEmoji(article.category)}</div>`;
+                
+                return `
+                <article class="card" onclick="navigateTo('article'); setTimeout(()=>renderSingleArticle('${article._id}'),100);">
+                    <div class="card-image" aria-hidden="true">${imageHtml}</div>
+                    <div class="card-body">
+                        <span class="card-category">${article.category || 'Islamic'}</span>
+                        <h3 class="card-title">${escapeHTML(article.title)}</h3>
+                        <p class="card-excerpt">${truncateText(article.content)}</p>
+                        <div class="card-meta">
+                            <span>✍️ NOOR Team</span>
+                            <span>📅 ${formatDate(article.createdAt)}</span>
+                        </div>
+                        <span class="card-link">Read More →</span>
+                    </div>
+                </article>`;
+            }
+
+            function createLoadingCard() {
+                return `<div class="loading-spinner"><span>🕋 Loading articles...</span></div>`;
+            }
+
+            function createErrorCard(message) {
+                return `<div class="error-message"><span>⚠️ ${message}</span></div>`;
+            }
+
+            // ========== Fetch Articles from API ==========
+            async function fetchArticles() {
+                if (isLoading) return;
+                isLoading = true;
+                
+                // Show loading state in all article containers
+                const containers = ['featuredArticlesContainer', 'latestPostsContainer', 'blogGridContainer'];
+                containers.forEach(containerId => {
+                    const container = document.getElementById(containerId);
+                    if (container && container.children.length === 0) {
+                        container.innerHTML = createLoadingCard();
                     }
                 });
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                // Render page-specific content
-                if (page === 'home') renderHomePage();
-                if (page === 'blog') renderBlogPage();
-                if (page === 'article' && articleId) renderSingleArticle(articleId);
-                if (page === 'about') renderAboutPage();
-                // Close mobile menu
-                closeMobileMenu();
-            }
-
-            function closeMobileMenu() {
-                mobileMenu.classList.remove('open');
-                hamburgerBtn.classList.remove('active');
-                hamburgerBtn.setAttribute('aria-expanded', 'false');
-                mobileMenu.setAttribute('aria-hidden', 'true');
-            }
-
-            // Expose to global scope for inline onclick
-            window.navigateTo = navigateTo;
-            window.closeMobileMenu = closeMobileMenu;
-
-            // ========== Mobile Menu Toggle ==========
-            hamburgerBtn.addEventListener('click', () => {
-                const isOpen = mobileMenu.classList.toggle('open');
-                hamburgerBtn.classList.toggle('active');
-                hamburgerBtn.setAttribute('aria-expanded', isOpen);
-                mobileMenu.setAttribute('aria-hidden', !isOpen);
-            });
-
-            // Close mobile menu on link click
-            mobileMenu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => closeMobileMenu());
-            });
-
-            // ========== Navbar Scroll Effect ==========
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 20) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
+                
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    allArticles = Array.isArray(data) ? data : [];
+                    articlesLoaded = true;
+                    
+                    // Re-render all article-based sections
+                    renderHomePage();
+                    if (currentPage === 'blog') renderBlogPage();
+                    
+                } catch (error) {
+                    console.error('Failed to fetch articles:', error);
+                    const errorMessage = 'Failed to load articles. Please try again later.';
+                    ['featuredArticlesContainer', 'latestPostsContainer', 'blogGridContainer'].forEach(containerId => {
+                        const container = document.getElementById(containerId);
+                        if (container && container.children.length === 1 && container.children[0]?.classList?.contains('loading-spinner')) {
+                            container.innerHTML = createErrorCard(errorMessage);
+                        } else if (container && (!container.children.length || container.innerHTML.trim() === '')) {
+                            container.innerHTML = createErrorCard(errorMessage);
+                        }
+                    });
+                } finally {
+                    isLoading = false;
                 }
-            });
+            }
 
-            // ========== Toast Notification ==========
+            // ========== Render Home Page ==========
+            function renderHomePage() {
+                if (!articlesLoaded && allArticles.length === 0) {
+                    fetchArticles();
+                    return;
+                }
+                
+                // Featured articles (first 3)
+                const featuredContainer = document.getElementById('featuredArticlesContainer');
+                if (featuredContainer) {
+                    const featured = allArticles.slice(0, 3);
+                    featuredContainer.innerHTML = featured.length ? featured.map(createBlogCard).join('') : createLoadingCard();
+                }
+                
+                // Latest posts (next 4)
+                const latestContainer = document.getElementById('latestPostsContainer');
+                if (latestContainer) {
+                    const latest = allArticles.slice(3, 7);
+                    latestContainer.innerHTML = latest.length ? latest.map(createBlogCard).join('') : createLoadingCard();
+                }
+                
+                // Prayer times
+                renderPrayerTimes();
+                // Categories
+                renderCategories();
+            }
+
+            function renderPrayerTimes() {
+                const prayerData = [
+                    { name: 'Fajr', arabic: 'الفجر', time: '4:32 AM' },
+                    { name: 'Dhuhr', arabic: 'الظهر', time: '12:15 PM' },
+                    { name: 'Asr', arabic: 'العصر', time: '4:10 PM' },
+                    { name: 'Maghrib', arabic: 'المغرب', time: '7:05 PM' },
+                    { name: 'Isha', arabic: 'العشاء', time: '8:45 PM' },
+                ];
+                const grid = document.getElementById('prayerGrid');
+                if (!grid) return;
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const timeToMinutes = (t) => {
+                    const [time, ampm] = t.split(' ');
+                    let [h, m] = time.split(':').map(Number);
+                    if (ampm === 'PM' && h !== 12) h += 12;
+                    if (ampm === 'AM' && h === 12) h = 0;
+                    return h * 60 + m;
+                };
+                const nowMinutes = currentHour * 60 + currentMinute;
+                const prayerMinutes = prayerData.map(p => timeToMinutes(p.time));
+                let currentPrayerIndex = -1;
+                for (let i = prayerMinutes.length - 1; i >= 0; i--) {
+                    if (nowMinutes >= prayerMinutes[i]) {
+                        currentPrayerIndex = i;
+                        break;
+                    }
+                }
+                if (currentPrayerIndex === -1) currentPrayerIndex = prayerMinutes.length - 1;
+                
+                grid.innerHTML = prayerData.map((p, i) => `
+                <div class="prayer-item ${i === currentPrayerIndex ? 'current' : ''}">
+                    <div class="prayer-name-arabic">${p.arabic}</div>
+                    <div class="prayer-name">${p.name}</div>
+                    <div class="prayer-time">${p.time}</div>
+                    ${i === currentPrayerIndex ? '<span style="font-size:0.7rem;color:var(--soft-emerald-500);">● Current</span>' : ''}
+                </div>`).join('');
+            }
+
+            function renderCategories() {
+                const categories = ['Quran', 'Hadith', 'Ramadan', 'Duas', 'Islamic History', 'Stories of Prophets'];
+                const categoryEmojis = {
+                    'Quran': '📖', 'Hadith': '🕊️', 'Ramadan': '🌙',
+                    'Duas': '🤲', 'Islamic History': '🏛️', 'Stories of Prophets': '👑'
+                };
+                const grid = document.getElementById('categoriesGrid');
+                if (!grid) return;
+                grid.innerHTML = categories.map(cat => `
+                <div class="category-card" onclick="navigateTo('blog'); setTimeout(()=>filterBlogByCategory('${cat}'),300);" style="cursor:pointer;">
+                    <div class="cat-icon">${categoryEmojis[cat]}</div>
+                    <div class="cat-name">${cat}</div>
+                </div>`).join('');
+            }
+
+            // ========== Blog Page Functions ==========
+            function renderBlogPage() {
+                if (!articlesLoaded && allArticles.length === 0) {
+                    fetchArticles();
+                    return;
+                }
+                renderBlogFilters();
+                filterAndSearchBlog();
+            }
+
+            function renderBlogFilters() {
+                const categories = ['All', 'Quran', 'Hadith', 'Ramadan', 'Duas', 'Islamic History', 'Stories of Prophets'];
+                const categoryEmojis = {
+                    'Quran': '📖', 'Hadith': '🕊️', 'Ramadan': '🌙',
+                    'Duas': '🤲', 'Islamic History': '🏛️', 'Stories of Prophets': '👑'
+                };
+                const chipsContainer = document.getElementById('blogFilterChips');
+                if (!chipsContainer) return;
+                chipsContainer.innerHTML = categories.map(cat => `
+                <button class="filter-chip ${blogFilterCategory === cat ? 'active' : ''}"
+                    onclick="setBlogFilter('${cat}')">${cat === 'All' ? '🌟 All' : (categoryEmojis[cat] || '📚') + ' ' + cat}</button>
+                `).join('');
+            }
+
+            function getFilteredPosts() {
+                let filtered = [...allArticles];
+                if (blogFilterCategory !== 'All') {
+                    filtered = filtered.filter(p => p.category === blogFilterCategory);
+                }
+                if (blogSearchQuery) {
+                    const query = blogSearchQuery.toLowerCase();
+                    filtered = filtered.filter(p =>
+                        p.title.toLowerCase().includes(query) ||
+                        (p.content && p.content.toLowerCase().includes(query)) ||
+                        (p.category && p.category.toLowerCase().includes(query))
+                    );
+                }
+                return filtered;
+            }
+
+            function renderBlogGrid() {
+                const grid = document.getElementById('blogGridContainer');
+                const pagination = document.getElementById('blogPagination');
+                if (!grid || !pagination) return;
+                
+                const filtered = getFilteredPosts();
+                const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE) || 1;
+                if (blogCurrentPageNum > totalPages) blogCurrentPageNum = totalPages;
+                const start = (blogCurrentPageNum - 1) * POSTS_PER_PAGE;
+                const pagePosts = filtered.slice(start, start + POSTS_PER_PAGE);
+                
+                grid.innerHTML = pagePosts.length > 0 ?
+                    pagePosts.map(createBlogCard).join('') :
+                    '<p style="text-align:center;grid-column:1/-1;padding:40px;color:var(--text-muted);">No articles found. Try a different search or category. 🔍</p>';
+                
+                let pagHTML = '';
+                pagHTML += `<button ${blogCurrentPageNum === 1 ? 'disabled style="opacity:0.4;"' : ''} onclick="goToBlogPage(${blogCurrentPageNum - 1})">←</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    pagHTML += `<button class="${i === blogCurrentPageNum ? 'active-page-num' : ''}" onclick="goToBlogPage(${i})">${i}</button>`;
+                }
+                pagHTML += `<button ${blogCurrentPageNum === totalPages ? 'disabled style="opacity:0.4;"' : ''} onclick="goToBlogPage(${blogCurrentPageNum + 1})">→</button>`;
+                pagination.innerHTML = pagHTML;
+            }
+
+            window.filterAndSearchBlog = function() {
+                const searchInput = document.getElementById('blogSearch');
+                blogSearchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                blogCurrentPageNum = 1;
+                renderBlogGrid();
+            };
+            
+            window.setBlogFilter = function(category) {
+                blogFilterCategory = category;
+                blogCurrentPageNum = 1;
+                const searchInput = document.getElementById('blogSearch');
+                if (searchInput) searchInput.value = '';
+                blogSearchQuery = '';
+                renderBlogFilters();
+                renderBlogGrid();
+            };
+            
+            window.filterBlogByCategory = function(category) {
+                setBlogFilter(category);
+            };
+            
+            window.goToBlogPage = function(pageNum) {
+                const filtered = getFilteredPosts();
+                const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE) || 1;
+                if (pageNum >= 1 && pageNum <= totalPages) {
+                    blogCurrentPageNum = pageNum;
+                    renderBlogGrid();
+                    document.getElementById('page-blog').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            };
+
+            // ========== Single Article View ==========
+            window.renderSingleArticle = function(articleId) {
+                const article = allArticles.find(a => a._id === articleId);
+                if (!article) {
+                    showToast('Article not found.');
+                    navigateTo('blog');
+                    return;
+                }
+                const container = document.getElementById('singleArticleContent');
+                if (!container) return;
+                
+                document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-page'));
+                const articlePage = document.getElementById('page-article');
+                if (articlePage) articlePage.classList.add('active-page');
+                currentPage = 'article';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                const related = allArticles.filter(a => a.category === article.category && a._id !== article._id).slice(0, 3);
+                const imageHtml = article.image && article.image !== '' 
+                    ? `<img src="${article.image}" alt="${article.title}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.style.fontSize='5rem'; this.parentElement.innerHTML='${getCategoryEmoji(article.category)}';">`
+                    : getCategoryEmoji(article.category);
+                
+                container.innerHTML = `
+                <article>
+                    <div class="article-header">
+                        <span class="card-category" style="margin:0 auto 10px;">${article.category || 'Islamic'}</span>
+                        <h1>${escapeHTML(article.title)}</h1>
+                        <p style="color:var(--text-muted);">✍️ NOOR Team &nbsp;|&nbsp; 📅 ${formatDate(article.createdAt)}</p>
+                    </div>
+                    <div class="article-featured-image" aria-hidden="true">${imageHtml}</div>
+                    <div class="article-content">
+                        <p>${escapeHTML(article.content).replace(/\n/g, '</p><p>')}</p>
+                        <div class="quran-callout">
+                            <p class="arabic-large">وَمَاۤ أَرْسَلْنَـٰكَ إِلَّا رَحْمَةًۭ لِّلْعَـٰلَمِينَ</p>
+                            <p style="font-style:italic;color:var(--text-muted);">"We have sent you only as a mercy to the worlds." — Surah Al-Anbiya (21:107)</p>
+                        </div>
+                    </div>
+                    <div class="author-box">
+                        <div class="author-avatar">🖊️</div>
+                        <div>
+                            <strong>NOOR Editorial Team</strong>
+                            <p style="margin:0;font-size:0.85rem;color:var(--text-muted);">Dedicated to spreading authentic Islamic knowledge.</p>
+                        </div>
+                    </div>
+                    <div class="social-share">
+                        <span style="font-weight:600;align-self:center;">Share:</span>
+                        <button onclick="shareArticle('${escapeHTML(article.title)}', '${article._id}')" title="Copy link">🔗</button>
+                        <button onclick="shareArticle('${escapeHTML(article.title)}', '${article._id}')" title="Twitter">𝕏</button>
+                        <button onclick="shareArticle('${escapeHTML(article.title)}', '${article._id}')" title="Facebook">f</button>
+                        <button onclick="shareArticle('${escapeHTML(article.title)}', '${article._id}')" title="WhatsApp">💬</button>
+                    </div>
+                </article>
+                <section class="comments-section" aria-labelledby="commentsHeading">
+                    <h3 id="commentsHeading">💬 Comments</h3>
+                    <form class="comment-form" onsubmit="submitComment(event, '${article._id}')">
+                        <input type="text" placeholder="Your Name" required aria-label="Comment author name">
+                        <textarea rows="3" placeholder="Share your thoughts... (be respectful)" required aria-label="Comment text"></textarea>
+                        <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-start;">Post Comment</button>
+                    </form>
+                    <div id="commentsList-${article._id}">
+                        <div class="comment"><strong>Amina K.</strong><p style="margin:4px 0 0;font-size:0.9rem;">MashaAllah, beautiful article! JazakAllah Khair for sharing this knowledge. 🌸</p></div>
+                        <div class="comment"><strong>Bilal R.</strong><p style="margin:4px 0 0;font-size:0.9rem;">This really touched my heart. May Allah bless the NOOR team.</p></div>
+                    </div>
+                </section>
+                ${related.length > 0 ? `
+                <section style="margin-top:32px;" aria-labelledby="relatedHeading">
+                    <h3 id="relatedHeading">📄 Related Articles</h3>
+                    <div class="cards-grid" style="margin-top:16px;">
+                        ${related.map(p => createBlogCard(p)).join('')}
+                    </div>
+                </section>` : ''}`;
+            };
+
+            // ========== Navigation and Utility Functions ==========
+            function escapeHTML(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+            
             function showToast(message) {
                 const toast = document.createElement('div');
                 toast.className = 'toast';
@@ -1942,308 +2087,68 @@
                     setTimeout(() => toast.remove(), 400);
                 }, 2800);
             }
-
-            // ========== Newsletter Handler ==========
-            window.handleNewsletter = function(event) {
-                event.preventDefault();
-                const input = event.target.querySelector('input[type="email"]');
-                if (input && input.value.trim()) {
-                    showToast('✅ Subscribed successfully! JazakAllah Khair.');
-                    input.value = '';
-                }
-            };
-
-            // ========== Contact Form Handler ==========
-            window.handleContactSubmit = function(event) {
-                event.preventDefault();
-                const form = event.target;
-                const name = form.querySelector('input[placeholder*="Name"]');
-                if (name && name.value.trim()) {
-                    showToast('✅ Message sent! We\'ll get back to you soon, insha\'Allah.');
-                    form.reset();
-                }
-            };
-
-            // ========== FAQ Toggle ==========
-            window.toggleFAQ = function(faqItem) {
-                const wasOpen = faqItem.classList.contains('open');
-                // Close all FAQs
-                document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('open'));
-                // Toggle clicked one
-                if (!wasOpen) {
-                    faqItem.classList.add('open');
-                    faqItem.querySelector('.faq-question span').textContent = '−';
-                } else {
-                    faqItem.querySelector('.faq-question span').textContent = '+';
-                }
-                // Reset all plus signs
-                document.querySelectorAll('.faq-item:not(.open) .faq-question span').forEach(s => s.textContent = '+');
-            };
-
-            // ========== Create Blog Card HTML ==========
-            function createBlogCard(post) {
-                return `
-                <article class="card" style="cursor:pointer;" onclick="navigateTo('article'); setTimeout(()=>renderSingleArticle(${post.id}),100);">
-                    <div class="card-image" aria-hidden="true">${post.imageEmoji}</div>
-                    <div class="card-body">
-                        <span class="card-category">${post.category}</span>
-                        <h3 class="card-title">${post.title}</h3>
-                        <p class="card-excerpt">${post.excerpt}</p>
-                        <div class="card-meta">
-                            <span>✍️ ${post.author.split(' ').slice(-1)[0]}</span>
-                            <span>📅 ${post.date}</span>
-                        </div>
-                        <span class="card-link" style="margin-top:8px;">Read More →</span>
-                    </div>
-                </article>`;
-            }
-
-            // ========== Render Home Page ==========
-            function renderHomePage() {
-                // Featured articles (first 3 featured)
-                const featured = blogPosts.filter(p => p.featured).slice(0, 3);
-                const featuredContainer = document.getElementById('featuredArticlesContainer');
-                if (featuredContainer) {
-                    featuredContainer.innerHTML = featured.map(createBlogCard).join('');
-                }
-                // Latest posts (next 4)
-                const latest = blogPosts.filter(p => !p.featured).slice(0, 4);
-                const latestContainer = document.getElementById('latestPostsContainer');
-                if (latestContainer) {
-                    latestContainer.innerHTML = latest.map(createBlogCard).join('');
-                }
-                // Prayer times
-                renderPrayerTimes();
-                // Categories
-                renderCategories();
-            }
-
-            function renderPrayerTimes() {
-                const grid = document.getElementById('prayerGrid');
-                if (!grid) return;
-                const now = new Date();
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-                // Determine current prayer roughly
-                let currentPrayerIndex = -1;
-                const timeToMinutes = (t) => {
-                    const [time, ampm] = t.split(' ');
-                    let [h, m] = time.split(':').map(Number);
-                    if (ampm === 'PM' && h !== 12) h += 12;
-                    if (ampm === 'AM' && h === 12) h = 0;
-                    return h * 60 + m;
-                };
-                const nowMinutes = currentHour * 60 + currentMinute;
-                const prayerMinutes = prayerData.map(p => timeToMinutes(p.time));
-                for (let i = prayerMinutes.length - 1; i >= 0; i--) {
-                    if (nowMinutes >= prayerMinutes[i]) {
-                        currentPrayerIndex = i;
-                        break;
-                    }
-                }
-                if (currentPrayerIndex === -1) currentPrayerIndex = prayerMinutes.length - 1;
-
-                grid.innerHTML = prayerData.map((p, i) => `
-                <div class="prayer-item ${i === currentPrayerIndex ? 'current' : ''}">
-                    <div class="prayer-name-arabic">${p.arabic}</div>
-                    <div class="prayer-name">${p.name}</div>
-                    <div class="prayer-time">${p.time}</div>
-                    ${i === currentPrayerIndex ? '<span style="font-size:0.7rem;color:var(--soft-emerald-500);">● Current</span>' : ''}
-                </div>
-            `).join('');
-            }
-
-            function renderCategories() {
-                const grid = document.getElementById('categoriesGrid');
-                if (!grid) return;
-                const cats = Object.keys(categoryEmojis);
-                grid.innerHTML = cats.map(cat => `
-                <div class="category-card" onclick="navigateTo('blog'); setTimeout(()=>filterBlogByCategory('${cat}'),300);" style="cursor:pointer;">
-                    <div class="cat-icon">${categoryEmojis[cat]}</div>
-                    <div class="cat-name">${cat}</div>
-                </div>
-            `).join('');
-            }
-
-            // ========== Render Blog Page ==========
-            function renderBlogPage() {
-                renderBlogFilters();
-                filterAndSearchBlog();
-            }
-
-            function renderBlogFilters() {
-                const chipsContainer = document.getElementById('blogFilterChips');
-                if (!chipsContainer) return;
-                chipsContainer.innerHTML = categories.map(cat => `
-                <button class="filter-chip ${blogFilterCategory === cat ? 'active' : ''}"
-                    onclick="setBlogFilter('${cat}')">${cat === 'All' ? '🌟 All' : categoryEmojis[cat] + ' ' + cat}</button>
-            `).join('');
-            }
-
-            window.setBlogFilter = function(category) {
-                blogFilterCategory = category;
-                blogCurrentPageNum = 1;
-                document.getElementById('blogSearch').value = '';
-                blogSearchQuery = '';
-                renderBlogFilters();
-                filterAndSearchBlog();
-            };
-
-            window.filterBlogByCategory = function(category) {
-                blogFilterCategory = category;
-                blogCurrentPageNum = 1;
-                blogSearchQuery = '';
-                const searchInput = document.getElementById('blogSearch');
-                if (searchInput) searchInput.value = '';
-                renderBlogFilters();
-                filterAndSearchBlog();
-            };
-
-            window.filterAndSearchBlog = function() {
-                const searchInput = document.getElementById('blogSearch');
-                blogSearchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
-                blogCurrentPageNum = 1;
-                renderBlogGrid();
-            };
-
-            function getFilteredPosts() {
-                let filtered = [...blogPosts];
-                if (blogFilterCategory !== 'All') {
-                    filtered = filtered.filter(p => p.category === blogFilterCategory);
-                }
-                if (blogSearchQuery) {
-                    filtered = filtered.filter(p =>
-                        p.title.toLowerCase().includes(blogSearchQuery) ||
-                        p.excerpt.toLowerCase().includes(blogSearchQuery) ||
-                        p.category.toLowerCase().includes(blogSearchQuery) ||
-                        p.content.toLowerCase().includes(blogSearchQuery)
-                    );
-                }
-                return filtered;
-            }
-
-            function renderBlogGrid() {
-                const grid = document.getElementById('blogGridContainer');
-                const pagination = document.getElementById('blogPagination');
-                if (!grid || !pagination) return;
-                const filtered = getFilteredPosts();
-                const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE) || 1;
-                if (blogCurrentPageNum > totalPages) blogCurrentPageNum = totalPages;
-                const start = (blogCurrentPageNum - 1) * POSTS_PER_PAGE;
-                const pagePosts = filtered.slice(start, start + POSTS_PER_PAGE);
-
-                grid.innerHTML = pagePosts.length > 0 ?
-                    pagePosts.map(createBlogCard).join('') :
-                    '<p style="text-align:center;grid-column:1/-1;padding:40px;color:var(--text-muted);">No articles found. Try a different search or category. 🔍</p>';
-
-                // Pagination
-                let pagHTML = '';
-                pagHTML +=
-                    `<button ${blogCurrentPageNum === 1 ? 'disabled style="opacity:0.4;"' : ''} onclick="goToBlogPage(${blogCurrentPageNum - 1})">←</button>`;
-                for (let i = 1; i <= totalPages; i++) {
-                    pagHTML +=
-                        `<button class="${i === blogCurrentPageNum ? 'active-page-num' : ''}" onclick="goToBlogPage(${i})">${i}</button>`;
-                }
-                pagHTML +=
-                    `<button ${blogCurrentPageNum === totalPages ? 'disabled style="opacity:0.4;"' : ''} onclick="goToBlogPage(${blogCurrentPageNum + 1})">→</button>`;
-                pagination.innerHTML = pagHTML;
-            }
-
-            window.goToBlogPage = function(pageNum) {
-                const filtered = getFilteredPosts();
-                const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE) || 1;
-                if (pageNum >= 1 && pageNum <= totalPages) {
-                    blogCurrentPageNum = pageNum;
-                    renderBlogGrid();
-                    document.getElementById('page-blog').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            };
-
-            // ========== Render Single Article ==========
-            window.renderSingleArticle = function(articleId) {
-                const post = blogPosts.find(p => p.id === articleId);
-                if (!post) return;
-                const container = document.getElementById('singleArticleContent');
-                if (!container) return;
-                // Switch to article page
+            
+            window.navigateTo = function(page, articleId = null) {
+                currentPage = page;
                 document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-page'));
-                const articlePage = document.getElementById('page-article');
-                if (articlePage) articlePage.classList.add('active-page');
-                currentPage = 'article';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                // Related articles (same category, excluding current)
-                const related = blogPosts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3);
-
-                container.innerHTML = `
-                <article>
-                    <div class="article-header">
-                        <span class="card-category" style="margin:0 auto 10px;">${post.category}</span>
-                        <h1>${post.title}</h1>
-                        <p style="color:var(--text-muted);">✍️ ${post.author} &nbsp;|&nbsp; 📅 ${post.date}</p>
-                    </div>
-                    <div class="article-featured-image" aria-hidden="true">${post.imageEmoji}</div>
-                    <div class="article-content">
-                        <p>${post.content.replace(/\n/g, '</p><p>')}</p>
-                        <div class="quran-callout">
-                            <p class="arabic-large">${post.quranCallout}</p>
-                            <p style="font-style:italic;color:var(--text-muted);">${post.quranCalloutRef}</p>
-                        </div>
-                    </div>
-                    <!-- Author Box -->
-                    <div class="author-box">
-                        <div class="author-avatar">🖊️</div>
-                        <div>
-                            <strong>${post.author}</strong>
-                            <p style="margin:0;font-size:0.85rem;color:var(--text-muted);">Contributor at NOOR Islamic Blog</p>
-                        </div>
-                    </div>
-                    <!-- Social Share -->
-                    <div class="social-share">
-                        <span style="font-weight:600;align-self:center;">Share:</span>
-                        <button onclick="shareArticle('${post.title}', '${post.id}')" title="Copy link">🔗</button>
-                        <button onclick="shareArticle('${post.title}', '${post.id}')" title="Twitter">𝕏</button>
-                        <button onclick="shareArticle('${post.title}', '${post.id}')" title="Facebook">f</button>
-                        <button onclick="shareArticle('${post.title}', '${post.id}')" title="WhatsApp">💬</button>
-                    </div>
-                </article>
-                <!-- Comments -->
-                <section class="comments-section" aria-labelledby="commentsHeading">
-                    <h3 id="commentsHeading">💬 Comments</h3>
-                    <form class="comment-form" onsubmit="submitComment(event, ${post.id})">
-                        <input type="text" placeholder="Your Name" required aria-label="Comment author name">
-                        <textarea rows="3" placeholder="Share your thoughts... (be respectful)" required aria-label="Comment text"></textarea>
-                        <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-start;">Post Comment</button>
-                    </form>
-                    <div id="commentsList-${post.id}">
-                        <div class="comment"><strong>Amina K.</strong><p style="margin:4px 0 0;font-size:0.9rem;">MashaAllah, beautiful article! JazakAllah Khair for sharing this knowledge. 🌸</p></div>
-                        <div class="comment"><strong>Bilal R.</strong><p style="margin:4px 0 0;font-size:0.9rem;">This really touched my heart. May Allah bless the NOOR team.</p></div>
-                    </div>
-                </section>
-                <!-- Related Articles -->
-                ${related.length > 0 ? `
-                <section style="margin-top:32px;" aria-labelledby="relatedHeading">
-                    <h3 id="relatedHeading">📄 Related Articles</h3>
-                    <div class="cards-grid" style="margin-top:16px;">
-                        ${related.map(p => createBlogCard(p)).join('')}
-                    </div>
-                </section>` : ''}
-            `;
-                // Update card click handlers for related articles
-                container.querySelectorAll('.card').forEach(card => {
-                    card.addEventListener('click', function() {
-                        const match = this.querySelector('.card-title');
-                        if (match) {
-                            const relatedPost = blogPosts.find(p => p.title === match.textContent);
-                            if (relatedPost) {
-                                navigateTo('article');
-                                setTimeout(() => renderSingleArticle(relatedPost.id), 100);
-                            }
-                        }
-                    });
+                const targetPage = document.getElementById('page-' + page);
+                if (targetPage) targetPage.classList.add('active-page');
+                document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-page') === page) link.classList.add('active');
                 });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (page === 'home') renderHomePage();
+                if (page === 'blog') renderBlogPage();
+                if (page === 'article' && articleId) renderSingleArticle(articleId);
+                if (page === 'about') renderAboutPage();
+                closeMobileMenu();
             };
-
+            
+            function renderAboutPage() {
+                const teamMembers = [
+                    { name: 'Ustadh Ahmad Farooq', role: 'Founder & Lead Writer', emoji: '🧔‍♂️', bio: 'Islamic scholar with 15 years of teaching experience.' },
+                    { name: 'Sr. Maryam Ibrahim', role: 'Content Editor', emoji: '🧕', bio: 'Passionate about making Islamic knowledge accessible.' },
+                    { name: 'Imam Khalid Hassan', role: 'Spiritual Advisor', emoji: '👳‍♂️', bio: 'Community imam dedicated to youth education.' },
+                    { name: 'Dr. Fatima Al-Zahra', role: 'Research Contributor', emoji: '👩‍🔬', bio: 'Historian specializing in Islamic civilization.' },
+                ];
+                const islamicValues = [
+                    { name: 'Ikhlas (Sincerity)', emoji: '💚', desc: 'Every action is for the sake of Allah alone.' },
+                    { name: 'Ilm (Knowledge)', emoji: '📚', desc: 'Seeking knowledge is an obligation upon every Muslim.' },
+                    { name: 'Rahma (Mercy)', emoji: '🕊️', desc: 'Embodying compassion in all our dealings.' },
+                    { name: 'Adl (Justice)', emoji: '⚖️', desc: 'Standing firmly for fairness and equity.' },
+                    { name: 'Sabr (Patience)', emoji: '🌿', desc: 'Persevering with grace through all trials.' },
+                    { name: 'Shukr (Gratitude)', emoji: '🙏', desc: 'Recognizing and appreciating every blessing.' },
+                ];
+                const teamGrid = document.getElementById('teamGrid');
+                const valuesGrid = document.getElementById('valuesGrid');
+                if (teamGrid) {
+                    teamGrid.innerHTML = teamMembers.map(m => `
+                    <div class="team-card">
+                        <div class="team-avatar">${m.emoji}</div>
+                        <h4>${m.name}</h4>
+                        <p style="font-size:0.85rem;color:var(--soft-emerald-600);font-weight:600;">${m.role}</p>
+                        <p style="font-size:0.85rem;color:var(--text-muted);">${m.bio}</p>
+                    </div>`).join('');
+                }
+                if (valuesGrid) {
+                    valuesGrid.innerHTML = islamicValues.map(v => `
+                    <div class="value-card">
+                        <div class="value-icon">${v.emoji}</div>
+                        <h4>${v.name}</h4>
+                        <p style="font-size:0.85rem;color:var(--text-muted);">${v.desc}</p>
+                    </div>`).join('');
+                }
+            }
+            
+            function closeMobileMenu() {
+                mobileMenu.classList.remove('open');
+                hamburgerBtn.classList.remove('active');
+                hamburgerBtn.setAttribute('aria-expanded', 'false');
+                mobileMenu.setAttribute('aria-hidden', 'true');
+            }
+            
+            window.closeMobileMenu = closeMobileMenu;
             window.submitComment = function(event, postId) {
                 event.preventDefault();
                 const form = event.target;
@@ -2254,93 +2159,80 @@
                     if (list) {
                         const commentDiv = document.createElement('div');
                         commentDiv.className = 'comment';
-                        commentDiv.innerHTML =
-                            `<strong>${escapeHTML(name)}</strong><p style="margin:4px 0 0;font-size:0.9rem;">${escapeHTML(text)}</p>`;
+                        commentDiv.innerHTML = `<strong>${escapeHTML(name)}</strong><p style="margin:4px 0 0;font-size:0.9rem;">${escapeHTML(text)}</p>`;
                         list.prepend(commentDiv);
                     }
                     form.reset();
                     showToast('✅ Comment posted! JazakAllah Khair for sharing.');
                 }
             };
-
+            
             window.shareArticle = function(title, id) {
                 const url = window.location.href.split('#')[0] + '#article-' + id;
                 if (navigator.clipboard) {
-                    navigator.clipboard.writeText(url).then(() => {
-                        showToast('🔗 Link copied! Share this article with others.');
-                    });
+                    navigator.clipboard.writeText(url).then(() => showToast('🔗 Link copied! Share this article with others.'));
                 } else {
                     showToast('📤 Share this article: ' + url);
                 }
             };
-
-            function escapeHTML(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            // ========== Render About Page ==========
-            function renderAboutPage() {
-                const teamGrid = document.getElementById('teamGrid');
-                const valuesGrid = document.getElementById('valuesGrid');
-                if (teamGrid) {
-                    teamGrid.innerHTML = teamMembers.map(m => `
-                    <div class="team-card">
-                        <div class="team-avatar">${m.emoji}</div>
-                        <h4>${m.name}</h4>
-                        <p style="font-size:0.85rem;color:var(--soft-emerald-600);font-weight:600;">${m.role}</p>
-                        <p style="font-size:0.85rem;color:var(--text-muted);">${m.bio}</p>
-                    </div>
-                `).join('');
+            
+            window.handleNewsletter = function(event) {
+                event.preventDefault();
+                const input = event.target.querySelector('input[type="email"]');
+                if (input && input.value.trim()) {
+                    showToast('✅ Subscribed successfully! JazakAllah Khair.');
+                    input.value = '';
                 }
-                if (valuesGrid) {
-                    valuesGrid.innerHTML = islamicValues.map(v => `
-                    <div class="value-card">
-                        <div class="value-icon">${v.emoji}</div>
-                        <h4>${v.name}</h4>
-                        <p style="font-size:0.85rem;color:var(--text-muted);">${v.desc}</p>
-                    </div>
-                `).join('');
+            };
+            
+            window.handleContactSubmit = function(event) {
+                event.preventDefault();
+                showToast('✅ Message sent! We\'ll get back to you soon, insha\'Allah.');
+                event.target.reset();
+            };
+            
+            window.toggleFAQ = function(faqItem) {
+                const wasOpen = faqItem.classList.contains('open');
+                document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('open'));
+                if (!wasOpen) {
+                    faqItem.classList.add('open');
+                    faqItem.querySelector('.faq-question span').textContent = '−';
+                } else {
+                    faqItem.querySelector('.faq-question span').textContent = '+';
                 }
-            }
-
-            // ========== Handle hash-based navigation for articles ==========
+                document.querySelectorAll('.faq-item:not(.open) .faq-question span').forEach(s => s.textContent = '+');
+            };
+            
+            // ========== Initialize ==========
+            hamburgerBtn.addEventListener('click', () => {
+                const isOpen = mobileMenu.classList.toggle('open');
+                hamburgerBtn.classList.toggle('active');
+                hamburgerBtn.setAttribute('aria-expanded', isOpen);
+                mobileMenu.setAttribute('aria-hidden', !isOpen);
+            });
+            
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => closeMobileMenu());
+            });
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 20) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
+            });
+            
             function handleHashChange() {
                 const hash = window.location.hash;
                 if (hash.startsWith('#article-')) {
-                    const articleId = parseInt(hash.replace('#article-', ''));
-                    if (!isNaN(articleId)) {
-                        navigateTo('article');
-                        setTimeout(() => renderSingleArticle(articleId), 100);
-                    }
+                    const articleId = hash.replace('#article-', '');
+                    navigateTo('article', articleId);
                 }
             }
             window.addEventListener('hashchange', handleHashChange);
-
-            // ========== Initialize ==========
-            function init() {
-                renderHomePage();
-                // Check for hash on load
-                handleHashChange();
-            }
-
-            // Run initialization
-            init();
-
-            // Expose functions needed globally
-            window.renderSingleArticle = renderSingleArticle;
-            window.filterAndSearchBlog = filterAndSearchBlog;
-            window.filterBlogByCategory = filterBlogByCategory;
-            window.setBlogFilter = setBlogFilter;
-            window.goToBlogPage = goToBlogPage;
-            window.submitComment = submitComment;
-            window.shareArticle = shareArticle;
-            window.handleNewsletter = window.handleNewsletter;
-            window.handleContactSubmit = window.handleContactSubmit;
-            window.toggleFAQ = window.toggleFAQ;
-
-            console.log('☾ NOOR Islamic Blog — Initialized successfully. Assalamu Alaikum! 🌿');
+            
+            // Start fetching articles and initialize
+            fetchArticles();
+            renderAboutPage();
+            handleHashChange();
         })();
     </script>
 </body>
