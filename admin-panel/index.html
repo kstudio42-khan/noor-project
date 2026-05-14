@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>NOOR Admin Panel | Islamic CMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        /* Light mode (default) */
+        :root {
+            --bg-primary: #f9fbf9;
+            --bg-glass: rgba(255, 255, 255, 0.65);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-primary: #1f2a1f;
+            --text-secondary: #2c3e2c;
+            --text-muted: #5a6e5a;
+            --border-light: rgba(46, 176, 109, 0.2);
+            --accent: #2eb06d;
+            --accent-dark: #1a8f54;
+            --accent-glow: rgba(46, 176, 109, 0.25);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            --radius-card: 24px;
+            --radius-element: 18px;
+        }
+
+        body.dark {
+            --bg-primary: #0f1a12;
+            --bg-glass: rgba(25, 35, 28, 0.7);
+            --card-bg: rgba(30, 45, 35, 0.85);
+            --text-primary: #eef4e8;
+            --text-secondary: #cbdccd;
+            --text-muted: #9bb09b;
+            --border-light: rgba(46, 176, 109, 0.35);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            backdrop-filter: blur(0px);
+            background-image: radial-gradient(circle at 10% 20%, rgba(46, 176, 109, 0.03) 0%, transparent 50%);
+        }
+
+        /* glass container */
+        .glass-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem 1.8rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            border: 1px solid var(--border-light);
+        }
+
+        .logo h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #2c855a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .logo span {
+            font-size: 1.5rem;
+            margin-right: 6px;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 60px;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-primary);
+            backdrop-filter: blur(4px);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* form card */
+        .form-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-card);
+            padding: 1.8rem;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border-light);
+            transition: transform 0.2s;
+        }
+
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1.5px solid var(--border-light);
+            border-radius: var(--radius-element);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+
+        body.dark input, body.dark textarea, body.dark select {
+            background: rgba(20, 30, 22, 0.7);
+            color: #eef4e8;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 0.9rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px var(--accent-glow);
+        }
+
+        .btn-danger {
+            background: #bf5b4a;
+        }
+        .btn-danger:hover {
+            background: #a13e2c;
+        }
+
+        /* articles grid */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.8rem;
+            margin-top: 1rem;
+        }
+
+        .article-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent);
+        }
+
+        .card-image {
+            height: 180px;
+            background: #cbdccd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-image .no-img {
+            font-size: 3rem;
+            color: var(--accent);
+            background: rgba(0,0,0,0.05);
+            width: 100%;
+            text-align: center;
+            line-height: 180px;
+        }
+
+        .card-content {
+            padding: 1.4rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: var(--accent-glow);
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--accent-dark);
+            margin-bottom: 0.8rem;
+            width: fit-content;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .short-content {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0.6rem 0;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-actions {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .delete-btn {
+            background: rgba(191, 91, 74, 0.15);
+            color: #bf5b4a;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        .delete-btn:hover {
+            background: #bf5b4a;
+            color: white;
+            transform: none;
+        }
+
+        /* loading & empty */
+        .loading-state, .error-state, .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            backdrop-filter: blur(8px);
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid var(--border-light);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .toast-message {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            animation: fadeInUp 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .toast-error {
+            background: #bf5b4a;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* responsive */
+        @media (max-width: 760px) {
+            .container {
+                padding: 1rem;
+            }
+            .admin-header {
+                flex-direction: column;
+                text-align: center;
+                border-radius: 30px;
+            }
+            .form-card {
+                padding: 1.2rem;
+            }
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* arabic / elegant touches */
+        .islamic-pattern {
+            background-image: radial-gradient(circle at 10% 20%, rgba(46, 176, 109, 0.02) 2%, transparent 2.5%);
+            background-size: 28px 28px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--border-light);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="islamic-pattern">
+    <div class="container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="logo">
+                <h1><span>☾</span> NOOR Admin Panel</h1>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Manage Islamic articles · light of knowledge</p>
+            </div>
+            <button class="theme-toggle" id="darkModeToggle">🌙 Dark Mode</button>
+        </div>
+
+        <!-- Add Article Form (glassmorphic) -->
+        <div class="form-card glass-panel">
+            <h2 style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">✨ Publish New Article</h2>
+            <div class="form-grid">
+                <input type="text" id="titleInput" placeholder="Article title *" required>
+                <textarea id="contentInput" rows="5" placeholder="Write full article content (Islamic knowledge, Quran verses, hadith...) *" required></textarea>
+                <input type="url" id="imageInput" placeholder="Image URL (optional, paste image link)">
+                <input type="text" id="categoryInput" placeholder="Category e.g., Quran, Hadith, Duas, History">
+                <button id="publishBtn">📤 Publish Article</button>
+                <div id="publishStatus" style="font-size: 0.8rem; color: var(--text-muted);"></div>
+            </div>
+        </div>
+
+        <!-- Articles List Section -->
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 1rem;">
+            <h2>📖 Latest Articles</h2>
+            <span id="refreshHint" style="font-size: 0.75rem; color: var(--accent);">🔄 live from server</span>
+        </div>
+        <div id="articlesContainer" class="articles-grid">
+            <!-- dynamic cards here -->
+            <div class="loading-state glass-panel">
+                <div class="spinner"></div>
+                <p>Loading blessed articles...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- API CONFIGURATION ----------
+        const API_BASE = 'https://noor-backend-hanj.onrender.com/api/articles';
+        
+        // DOM elements
+        const articlesContainer = document.getElementById('articlesContainer');
+        const titleInput = document.getElementById('titleInput');
+        const contentInput = document.getElementById('contentInput');
+        const imageInput = document.getElementById('imageInput');
+        const categoryInput = document.getElementById('categoryInput');
+        const publishBtn = document.getElementById('publishBtn');
+        const publishStatus = document.getElementById('publishStatus');
+
+        // Helper: show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${isError ? 'toast-error' : ''}`;
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // Helper: fetch and render all articles
+        async function fetchAndRenderArticles() {
+            // show loading skeleton
+            articlesContainer.innerHTML = `
+                <div class="loading-state glass-panel" style="grid-column:1/-1;">
+                    <div class="spinner"></div>
+                    <p>Loading articles from server...</p>
+                </div>
+            `;
+            try {
+                const response = await fetch(API_BASE);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const articles = await response.json();
+                if (!Array.isArray(articles)) throw new Error('Invalid data format');
+                renderArticlesList(articles);
+            } catch (error) {
+                console.error(error);
+                articlesContainer.innerHTML = `
+                    <div class="error-state glass-panel" style="grid-column:1/-1;">
+                        <span style="font-size:2rem;">⚠️</span>
+                        <p>Failed to load articles. Network or server issue.</p>
+                        <button id="retryFetchBtn" style="margin-top: 12px;">⟳ Retry</button>
+                    </div>
+                `;
+                const retryBtn = document.getElementById('retryFetchBtn');
+                if (retryBtn) retryBtn.addEventListener('click', () => fetchAndRenderArticles());
+                showToast('Could not fetch articles', true);
+            }
+        }
+
+        // render articles cards
+        function renderArticlesList(articles) {
+            if (!articles.length) {
+                articlesContainer.innerHTML = `
+                    <div class="empty-state glass-panel" style="grid-column:1/-1;">
+                        <span style="font-size: 3rem;">🕌</span>
+                        <p>No articles yet. Publish the first article using the form above.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const cardsHTML = articles.map(article => {
+                // safe fields
+                const id = article._id;
+                const title = article.title || 'Untitled';
+                const content = article.content || '';
+                const shortContent = content.length > 120 ? content.substring(0, 120) + '…' : content;
+                const category = article.category || 'General';
+                let imageUrl = article.image;
+                // if image missing or invalid placeholder
+                const hasValidImage = imageUrl && imageUrl.trim() !== '' && (imageUrl.startsWith('http') || imageUrl.startsWith('data:image'));
+                
+                return `
+                    <div class="article-card" data-id="${id}">
+                        <div class="card-image">
+                            ${hasValidImage ? `<img src="${imageUrl}" alt="${escapeHtml(title)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-img\'>📜</div>';">` : `<div class="no-img">📖</div>`}
+                        </div>
+                        <div class="card-content">
+                            <span class="category-badge">${escapeHtml(category)}</span>
+                            <h3 class="card-title">${escapeHtml(title)}</h3>
+                            <div class="short-content">${escapeHtml(shortContent) || 'Read this enlightening article...'}</div>
+                            <div class="card-actions">
+                                <button class="delete-btn" data-id="${id}">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            articlesContainer.innerHTML = cardsHTML;
+
+            // attach delete event listeners to each delete button
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const articleId = btn.getAttribute('data-id');
+                    if (!articleId) return;
+                    if (confirm('Are you sure you want to delete this article? This action is permanent.')) {
+                        await deleteArticle(articleId);
+                    }
+                });
+            });
+        }
+
+        // delete article by ID
+        async function deleteArticle(id) {
+            try {
+                // show deleting indicator on card (optional)
+                const card = document.querySelector(`.article-card[data-id="${id}"]`);
+                if (card) {
+                    const originalHTML = card.innerHTML;
+                    card.style.opacity = '0.5';
+                    card.style.pointerEvents = 'none';
+                }
+                const response = await fetch(`${API_BASE}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) {
+                    throw new Error(`Delete failed: ${response.status}`);
+                }
+                showToast('✅ Article deleted successfully');
+                // refresh list
+                await fetchAndRenderArticles();
+            } catch (error) {
+                console.error(error);
+                showToast('❌ Failed to delete article. Check connection.', true);
+                // revert card opacity if needed
+                const card = document.querySelector(`.article-card[data-id="${id}"]`);
+                if (card) {
+                    card.style.opacity = '';
+                    card.style.pointerEvents = '';
+                }
+            }
+        }
+
+        // publish new article
+        async function publishArticle() {
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+            const image = imageInput.value.trim();
+            const category = categoryInput.value.trim() || 'Islamic';
+
+            if (!title || !content) {
+                showToast('Please fill Title and Content fields', true);
+                return;
+            }
+
+            const newArticle = {
+                title: title,
+                content: content,
+                image: image || '',
+                category: category
+            };
+
+            publishBtn.disabled = true;
+            publishBtn.innerHTML = '⏳ Publishing...';
+            publishStatus.innerText = 'Sending to server...';
+
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newArticle)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `HTTP ${response.status}`);
+                }
+                const result = await response.json();
+                showToast('✨ Article published successfully!');
+                // clear form
+                titleInput.value = '';
+                contentInput.value = '';
+                imageInput.value = '';
+                categoryInput.value = '';
+                publishStatus.innerText = '';
+                // refresh articles list
+                await fetchAndRenderArticles();
+            } catch (err) {
+                console.error(err);
+                publishStatus.innerText = `Error: ${err.message}`;
+                showToast('❌ Publishing failed: ' + err.message, true);
+            } finally {
+                publishBtn.disabled = false;
+                publishBtn.innerHTML = '📤 Publish Article';
+                setTimeout(() => { if(publishStatus.innerText !== '') publishStatus.innerText = ''; }, 3000);
+            }
+        }
+
+        // utility: escape html to prevent XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+
+        // ---------- DARK MODE TOGGLE ----------
+        const darkToggle = document.getElementById('darkModeToggle');
+        function initTheme() {
+            const stored = localStorage.getItem('noor-admin-theme');
+            if (stored === 'dark') {
+                document.body.classList.add('dark');
+                darkToggle.innerHTML = '☀️ Light Mode';
+            } else {
+                document.body.classList.remove('dark');
+                darkToggle.innerHTML = '🌙 Dark Mode';
+            }
+        }
+        darkToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('noor-admin-theme', isDark ? 'dark' : 'light');
+            darkToggle.innerHTML = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+        initTheme();
+
+        // load articles on page load
+        fetchAndRenderArticles();
+
+        // publish button listener
+        publishBtn.addEventListener('click', publishArticle);
+
+        // optional: refresh on demand if user wants (not required but fine)
+        window.fetchAndRenderArticles = fetchAndRenderArticles;
+    </script>
+</body>
+</html>
